@@ -1,0 +1,83 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>No Spend Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* (CSS igual ao seu – mantive tudo, não repito aqui para não poluir) */
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+<div class="card">
+<h1>💰 Dias sem gastar dinheiro</h1>
+
+<div class="counter" id="counter">0</div>
+<div class="subtitle">dias sem gastar</div>
+
+<button id="panicBtn">🚨 Gastei dinheiro</button>
+<p style="text-align:center;font-size:12px;margin-top:10px;">
+  <a href="history.html">📋 Ver histórico de gastos</a>
+</p>
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+const START_DATE = new Date("2026-01-01T00:00:00").getTime();
+const DAY = 86400000;
+
+const STORAGE = {
+  start:"ns_start",
+  inclusive:"ns_inclusive",
+  resets:"ns_resets",
+  history:"ns_history",
+  init:"ns_init"
+};
+
+function init(){
+  if(localStorage.getItem(STORAGE.init)) return;
+  localStorage.setItem(STORAGE.start, START_DATE);
+  localStorage.setItem(STORAGE.inclusive, "true");
+  localStorage.setItem(STORAGE.resets, "0");
+  localStorage.setItem(STORAGE.history, "[]");
+  localStorage.setItem(STORAGE.init, "true");
+}
+
+function panic(){
+  const item = prompt("O que você comprou?");
+  if(!item) return;
+  const value = prompt("Qual foi o valor?");
+  if(!value) return;
+
+  const now = Date.now();
+  const history = JSON.parse(localStorage.getItem(STORAGE.history));
+
+  history.unshift({
+    date: new Date(now).toLocaleDateString("pt-BR"),
+    item,
+    value
+  });
+
+  localStorage.setItem(STORAGE.history, JSON.stringify(history));
+  localStorage.setItem(STORAGE.start, now);
+  localStorage.setItem(STORAGE.inclusive, "false");
+  localStorage.setItem(
+    STORAGE.resets,
+    String(Number(localStorage.getItem(STORAGE.resets)) + 1)
+  );
+
+  alert("Reset registrado com sucesso!");
+}
+
+init();
+document.getElementById("panicBtn").addEventListener("click", panic);
+
+});
+</script>
+</body>
+</html>
