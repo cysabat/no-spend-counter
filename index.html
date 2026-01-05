@@ -19,16 +19,28 @@ body{
   margin:0;
   font-family:Inter, Arial, sans-serif;
   background:linear-gradient(180deg,#f7fdfb,#fdf3f7);
-  padding:40px 24px;
+
+  /* 👇 ESSENCIAL PARA xTiles */
+  width:100vw;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+  .wrapper{
+  width:100%;
+  max-width:360px;
+  height:100%;
+  max-height:560px; /* ideal para 16x14 */
+  display:flex;
+  align-items:center;
 }
 
-.wrapper{ width:360px; }
-
 .card{
-  background:var(--card);
-  border-radius:22px;
-  padding:26px;
-  box-shadow:0 16px 40px rgba(79,209,197,.35);
+  width:100%;
+  max-height:100%;
+  overflow:hidden;
 }
 
 h1{
