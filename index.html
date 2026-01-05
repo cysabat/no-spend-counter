@@ -5,25 +5,24 @@
   <title>No Spend Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
       --bg: #f7fdfb;
       --card: #ffffff;
-      --primary: #7fd1c6;      /* menta */
-      --secondary: #f3c6d3;    /* rosa delicado */
-      --accent: #c7b7e2;       /* lilás suave */
+      --primary: #5fc6b6;      /* menta mais forte */
+      --secondary: #e8a5b8;    /* rosa mais presente */
+      --accent: #9d8fd9;       /* lilás */
       --text: #2f4f4f;
-      --muted: #7a9c99;
-      --danger: #f28b8b;
+      --muted: #6b8f8b;
+      --danger: #e57373;
     }
 
     body {
       margin: 0;
-      font-family: "Inter", Arial, sans-serif;
-      background: linear-gradient(180deg, #f7fdfb, #fdf6fa);
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #f7fdfb, #fdf4f8);
       color: var(--text);
       display: flex;
       justify-content: center;
@@ -32,44 +31,45 @@
 
     .app {
       width: 100%;
-      max-width: 420px; /* ~1/3 da página */
+      max-width: 420px;
     }
 
     .card {
       background: var(--card);
-      border-radius: 20px;
+      border-radius: 22px;
       padding: 22px;
       margin-bottom: 18px;
-      box-shadow: 0 12px 30px rgba(127, 209, 198, 0.25);
+      box-shadow: 0 14px 34px rgba(95, 198, 182, 0.25);
     }
 
     h1 {
       font-size: 20px;
-      text-align: center;
-      margin-bottom: 12px;
-      color: #3b6f6a;
+      margin-bottom: 10px;
+      color: #2f6f68;
+      text-align: left;
     }
 
     .counter {
-      font-size: 40px;
+      font-size: 42px;
       font-weight: 700;
       color: var(--primary);
-      text-align: center;
+      text-align: left; /* alinhado à esquerda */
       margin-bottom: 4px;
     }
 
     .meta {
       font-size: 14px;
-      text-align: center;
       color: var(--muted);
+      margin-bottom: 10px;
+      text-align: left;
     }
 
     .progress {
       height: 10px;
-      background: #e6f4f1;
+      background: #dff1ee;
       border-radius: 8px;
       overflow: hidden;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .progress div {
@@ -90,13 +90,13 @@
 
     button {
       width: 100%;
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 14px;
+      margin-top: 18px;
+      padding: 13px;
+      border-radius: 16px;
       border: none;
       font-size: 14px;
       cursor: pointer;
-      background: linear-gradient(90deg, var(--danger), #f7a1a1);
+      background: linear-gradient(90deg, var(--danger), #ef9a9a);
       color: white;
     }
 
@@ -104,19 +104,19 @@
     .badges {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
     }
 
     .badge {
-      padding: 6px 10px;
+      padding: 7px 12px;
       border-radius: 999px;
       font-size: 12px;
-      background: #e8f6f3;
-      color: #5a9c94;
-      border: 1px solid #ccebe6;
-      opacity: 0.4;
+      background: #e1f4f1;
+      color: #3f7f77;
+      border: 1px solid #bfe6e0;
+      opacity: 0.35;
+      transition: all .3s ease;
     }
 
     .badge.active {
@@ -124,6 +124,7 @@
       background: linear-gradient(90deg, var(--primary), var(--accent));
       color: white;
       border: none;
+      box-shadow: 0 6px 14px rgba(95, 198, 182, 0.35);
     }
 
     canvas {
@@ -135,7 +136,6 @@
 <body>
 <div class="app">
 
-  <!-- CONTADOR -->
   <div class="card">
     <h1>💰 Dias sem gastar dinheiro</h1>
 
@@ -153,7 +153,6 @@
       <div><span id="since">01/01/2026</span></div>
     </div>
 
-    <!-- BADGES -->
     <div class="badges">
       <div class="badge" data-days="30">🌱 30 dias</div>
       <div class="badge" data-days="90">🌸 90 dias</div>
@@ -164,7 +163,6 @@
     <button onclick="panic()">🚨 Gastei dinheiro</button>
   </div>
 
-  <!-- GRÁFICO -->
   <div class="card">
     <h1>📈 Histórico</h1>
     <canvas id="chart"></canvas>
@@ -174,6 +172,7 @@
 
 <script>
   const FIXED_START_DATE = new Date("2026-01-01T00:00:00").getTime();
+  const INITIAL_OFFSET_DAYS = 5; // você já está há 5 dias sem gastar
   const GOAL_DAYS = 365;
 
   const STORAGE = {
@@ -194,16 +193,20 @@
   function getStart() {
     let start = localStorage.getItem(STORAGE.start);
     if (!start) {
-      localStorage.setItem(STORAGE.start, FIXED_START_DATE);
-      return FIXED_START_DATE;
+      const adjustedStart =
+        FIXED_START_DATE - INITIAL_OFFSET_DAYS * 24 * 60 * 60 * 1000;
+      localStorage.setItem(STORAGE.start, adjustedStart);
+      return adjustedStart;
     }
     return Number(start);
   }
 
   function updateBadges(days) {
     document.querySelectorAll(".badge").forEach(badge => {
-      const limit = Number(badge.dataset.days);
-      badge.classList.toggle("active", days >= limit);
+      badge.classList.toggle(
+        "active",
+        days >= Number(badge.dataset.days)
+      );
     });
   }
 
@@ -220,8 +223,8 @@
       record = days;
       localStorage.setItem(STORAGE.record, record);
     }
-    document.getElementById("record").innerText = record;
 
+    document.getElementById("record").innerText = record;
     document.getElementById("resets").innerText =
       localStorage.getItem(STORAGE.resets) || 0;
 
@@ -254,20 +257,11 @@
     updateUI();
   }
 
-  /* GRÁFICO */
   const ctx = document.getElementById("chart");
   const chart = new Chart(ctx, {
     type: "bar",
-    data: {
-      labels: [],
-      datasets: [{
-        data: [],
-        backgroundColor: "#7fd1c6"
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } }
-    }
+    data: { labels: [], datasets: [{ data: [], backgroundColor: "#5fc6b6" }] },
+    options: { plugins: { legend: { display: false } } }
   });
 
   function updateChart() {
