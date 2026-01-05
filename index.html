@@ -61,6 +61,27 @@ h1{
   width:0%;
   transition:width .4s ease;
 }
+.badges{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+.badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  background:#e6f6f3;
+  color:#4c8f88;
+  opacity:.35;
+  transition:.3s;
+}
+.badge.active{
+  opacity:1;
+  background:linear-gradient(90deg,var(--mint),var(--lilac));
+  color:white;
+}
 button{
   width:100%;
   margin-top:18px;
@@ -92,15 +113,23 @@ a{
 <div class="wrapper">
 <div class="card">
 
-<h1>💰 Dias sem gastar dinheiro</h1>
+<h1>💰 DIAS SEM GASTAR/h1>
 
 <div class="counter" id="counter">0</div>
-<div class="subtitle">dias sem gastar</div>
+<div class="subtitle">DINHEIRO COM BOBAGENS...</div>
 
 <div class="clock" id="clock">⏰ carregando...</div>
 
 <div class="progress">
   <div id="progressBar"></div>
+</div>
+
+<!-- BADGES -->
+<div class="badges">
+  <div class="badge" data-days="30">🏅 30 dias</div>
+  <div class="badge" data-days="90">🏅 90 dias</div>
+  <div class="badge" data-days="180">🏅 180 dias</div>
+  <div class="badge" data-days="365">🏆 365 dias</div>
 </div>
 
 <button id="panicBtn">🚨 Gastei dinheiro</button>
@@ -139,11 +168,23 @@ function daysSince(start){
   return Math.floor((Date.now() - start) / DAY) + 1;
 }
 
+function updateBadges(days){
+  document.querySelectorAll(".badge").forEach(b=>{
+    if(days >= Number(b.dataset.days)){
+      b.classList.add("active");
+    }
+  });
+}
+
 function updateCounter(){
   const days = daysSince(START_DATE);
+
   document.getElementById("counter").innerText = days;
+
   document.getElementById("progressBar").style.width =
     Math.min((days / GOAL) * 100, 100) + "%";
+
+  updateBadges(days);
 }
 
 /* =========================
@@ -168,21 +209,16 @@ async function panic(){
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
 
-    if(!response.ok){
-      throw new Error("Erro ao gravar");
-    }
+    if(!response.ok) throw new Error();
 
     status.innerText = "✅ Gasto salvo com sucesso!";
-    setTimeout(() => status.innerText = "", 3000);
+    setTimeout(()=>status.innerText="",3000);
 
-  } catch (err) {
-    console.error(err);
+  } catch {
     status.innerText = "❌ Erro ao salvar gasto";
   }
 }
