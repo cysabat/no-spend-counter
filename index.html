@@ -38,7 +38,7 @@
     }
 
     .counter {
-      font-size: 36px;
+      font-size: 38px;
       font-weight: bold;
       color: #22c55e;
       text-align: center;
@@ -47,7 +47,7 @@
     .meta {
       font-size: 14px;
       text-align: center;
-      margin-top: 8px;
+      margin-top: 6px;
       color: #94a3b8;
     }
 
@@ -56,13 +56,14 @@
       background: #1e293b;
       border-radius: 6px;
       overflow: hidden;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     .progress div {
       height: 100%;
       background: #22c55e;
       width: 0%;
+      transition: width .3s ease;
     }
 
     .stats {
@@ -70,75 +71,78 @@
       justify-content: space-between;
       font-size: 14px;
       margin-top: 12px;
-    }
-
-    input, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      font-size: 14px;
-    }
-
-    input {
-      background: #1e293b;
-      color: white;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
       cursor: pointer;
-    }
-
-    .panic {
       background: #dc2626;
       color: white;
+    }
+
+    canvas {
+      margin-top: 10px;
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
+<div class="app">
 
-    <div class="card">
-      <h1>💰 Dias sem gastar dinheiro</h1>
+  <!-- CONTADOR -->
+  <div class="card">
+    <h1>💰 Dias sem gastar dinheiro</h1>
 
-      <div class="counter" id="counter">0 dias</div>
+    <div class="counter" id="counter">0 dias</div>
 
-      <div class="meta">
-        Meta (dias):
-        <input type="number" id="goal" min="1">
-      </div>
-
-      <div class="progress">
-        <div id="progressBar"></div>
-      </div>
-
-      <div class="stats">
-        <div>🏆 Recorde: <span id="record">0</span></div>
-        <div>📅 Desde: <span id="since">-</span></div>
-      </div>
-
-      <button class="panic" onclick="panic()">🚨 Gastei dinheiro</button>
+    <div class="meta">
+      Meta anual automática: <strong>365 dias</strong>
     </div>
 
-    <div class="card">
-      <h1>📈 Histórico</h1>
-      <canvas id="chart"></canvas>
+    <div class="progress">
+      <div id="progressBar"></div>
     </div>
 
+    <div class="stats">
+      <div>🏆 Recorde: <span id="record">0</span> dias</div>
+      <div>🔁 Resets: <span id="resets">0</span></div>
+      <div>📅 Desde: <span id="since">01/01/2026</span></div>
+    </div>
+
+    <button onclick="panic()">🚨 Gastei dinheiro</button>
   </div>
 
+  <!-- GRÁFICO -->
+  <div class="card">
+    <h1>📈 Histórico de ciclos</h1>
+    <canvas id="chart"></canvas>
+  </div>
+
+</div>
+
 <script>
+  /* =============================
+     CONFIGURAÇÕES FIXAS
+  ============================== */
+  const FIXED_START_DATE = new Date("2026-01-01T00:00:00").getTime();
+  const GOAL_DAYS = 365;
+
   const STORAGE = {
     start: "ns_start",
     record: "ns_record",
     history: "ns_history",
-    goal: "ns_goal"
+    resets: "ns_resets"
   };
 
   function now() {
-    new Date("2026-01-01T00:00:00").getTime();
+    return Date.now();
   }
 
   function daysBetween(ms) {
@@ -146,87 +150,6 @@
   }
 
   function getStart() {
-    let s = localStorage.getItem(STORAGE.start);
-    if (!s) {
-      s = now();
-      localStorage.setItem(STORAGE.start, s);
-    }
-    return Number(s);
-  }
+    let start = localStorage.getItem(STORAGE.start);
 
-  function updateUI() {
-    const start = getStart();
-    const diff = now() - start;
-    const days = daysBetween(diff);
-
-    document.getElementById("counter").innerText = days + " dias";
-    document.getElementById("since").innerText =
-      new Date(start).toLocaleDateString("pt-BR");
-
-    let record = Number(localStorage.getItem(STORAGE.record) || 0);
-    if (days > record) {
-      record = days;
-      localStorage.setItem(STORAGE.record, record);
-    }
-    document.getElementById("record").innerText = record;
-
-    const goal = Number(localStorage.getItem(STORAGE.goal) || 30);
-    document.getElementById("goal").value = goal;
-
-    const progress = Math.min((days / goal) * 100, 100);
-    document.getElementById("progressBar").style.width = progress + "%";
-  }
-
-  function panic() {
-    const reason = prompt("Qual foi o gasto?");
-    if (!reason) return;
-
-    const history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
-    history.push({
-      date: new Date().toLocaleDateString("pt-BR"),
-      days: daysBetween(now() - getStart()),
-      reason: reason
-    });
-
-    localStorage.setItem(STORAGE.history, JSON.stringify(history));
-    localStorage.setItem(STORAGE.start, now());
-
-    updateChart();
-    updateUI();
-  }
-
-  document.getElementById("goal").addEventListener("change", e => {
-    localStorage.setItem(STORAGE.goal, e.target.value);
-    updateUI();
-  });
-
-  const ctx = document.getElementById("chart");
-  const chart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Dias sem gastar",
-        data: []
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } }
-    }
-  });
-
-  function updateChart() {
-    const history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
-    chart.data.labels = history.map(h => h.date);
-    chart.data.datasets[0].data = history.map(h => h.days);
-    chart.update();
-  }
-
-  updateChart();
-  updateUI();
-  setInterval(updateUI, 60000);
-</script>
-
-</body>
-</html>
+    if (!
