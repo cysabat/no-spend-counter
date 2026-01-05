@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>No Spend Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 :root{
@@ -40,6 +40,7 @@ h1{
   text-align:center;
 }
 
+/* CONTADOR */
 .counter{
   font-size:64px;
   font-weight:900;
@@ -51,9 +52,30 @@ h1{
   text-align:center;
   font-size:14px;
   color:var(--muted);
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 
+/* RELÓGIO MODERNO */
+.clock{
+  display:flex;
+  justify-content:center;
+  font-size:20px;
+  font-weight:600;
+  letter-spacing:2px;
+  color:#4b7f79;
+  margin-bottom:14px;
+}
+
+.clock .colon{
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%,50%,100%{opacity:1}
+  25%,75%{opacity:.2}
+}
+
+/* PROGRESSO */
 .progress{
   height:12px;
   background:#e3f3f1;
@@ -65,9 +87,10 @@ h1{
   height:100%;
   background:linear-gradient(90deg,var(--mint),var(--pink));
   width:0%;
-  transition:width .5s ease;
+  transition:width .4s ease;
 }
 
+/* STATS */
 .stats{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -78,6 +101,7 @@ h1{
   text-align:center;
 }
 
+/* RESET INFO */
 .last-reset{
   margin-top:14px;
   padding:12px;
@@ -87,6 +111,7 @@ h1{
   color:#356e68;
 }
 
+/* BADGES */
 .badges{
   display:flex;
   justify-content:center;
@@ -109,6 +134,7 @@ h1{
   color:white;
 }
 
+/* BOTÃO */
 button{
   width:100%;
   margin-top:20px;
@@ -133,6 +159,12 @@ button{
     <div class="counter" id="counter">5</div>
     <div class="subtitle">dias sem gastar</div>
 
+    <div class="clock">
+      <span id="hh">00</span><span class="colon">:</span>
+      <span id="mm">00</span><span class="colon">:</span>
+      <span id="ss">00</span>
+    </div>
+
     <div class="progress">
       <div id="progressBar"></div>
     </div>
@@ -140,11 +172,14 @@ button{
     <div class="stats">
       <div>🏆 Recorde<br><strong id="record">5</strong></div>
       <div>🔁 Resets<br><strong id="resets">0</strong></div>
-      <div>📅 Início<br><strong id="since">01/01/2026</strong></div>
+      <div>📅 Início<br><strong>01/01/2026</strong></div>
       <div>🎯 Meta<br><strong>365</strong></div>
     </div>
 
-    <div id="lastReset" class="last-reset" style="display:none"></div>
+    <!-- LINHA SEMPRE VISÍVEL -->
+    <div id="lastReset" class="last-reset">
+      🎉 Nenhum gasto registrado até agora
+    </div>
 
     <div class="badges">
       <div class="badge" data-days="30">30</div>
@@ -159,8 +194,9 @@ button{
 </div>
 
 <script>
+/* CONFIGURAÇÃO */
 const START_DATE = new Date("2026-01-01T00:00:00").getTime();
-const CURRENT_DAYS = 5;
+const CONFIRMED_DAYS = 5;
 const GOAL = 365;
 
 const STORAGE = {
@@ -170,56 +206,66 @@ const STORAGE = {
   last:"ns_last_reset"
 };
 
-function daysBetween(ms){
-  return Math.floor(ms / (1000*60*60*24));
-}
-
+/* INIT */
 function getStart(){
   let s = localStorage.getItem(STORAGE.start);
   if(!s){
-    const realStart = START_DATE - CURRENT_DAYS*86400000;
+    const realStart = START_DATE - CONFIRMED_DAYS*86400000;
     localStorage.setItem(STORAGE.start,realStart);
     return realStart;
   }
   return Number(s);
 }
 
+function daysBetween(ms){
+  return Math.floor(ms/(1000*60*60*24));
+}
+
+/* RELÓGIO */
+function updateClock(){
+  const n = new Date();
+  hh.innerText = String(n.getHours()).padStart(2,"0");
+  mm.innerText = String(n.getMinutes()).padStart(2,"0");
+  ss.innerText = String(n.getSeconds()).padStart(2,"0");
+}
+
+/* UPDATE */
 function update(){
   const start = getStart();
   const days = daysBetween(Date.now()-start);
 
-  document.getElementById("counter").innerText = days;
-  document.getElementById("since").innerText =
-    new Date(start).toLocaleDateString("pt-BR");
+  counter.innerText = days;
 
-  let record = Number(localStorage.getItem(STORAGE.record)||0);
+  let record = Number(localStorage.getItem(STORAGE.record)||CONFIRMED_DAYS);
   if(days>record){
     record=days;
     localStorage.setItem(STORAGE.record,record);
   }
+  recordEl.innerText = record;
 
-  document.getElementById("record").innerText = record;
-  document.getElementById("resets").innerText =
-    localStorage.getItem(STORAGE.resets)||0;
+  resets.innerText = localStorage.getItem(STORAGE.resets)||0;
 
-  document.getElementById("progressBar").style.width =
+  progressBar.style.width =
     Math.min((days/GOAL)*100,100)+"%";
+
+  document.querySelectorAll(".badge").forEach(b=>{
+    if(days>=Number(b.dataset.days)) b.classList.add("active");
+  });
 
   const last = localStorage.getItem(STORAGE.last);
   if(last){
     const r = JSON.parse(last);
-    document.getElementById("lastReset").style.display="block";
-    document.getElementById("lastReset").innerHTML =
+    lastReset.innerHTML =
       `🧾 Último gasto em <strong>${r.date}</strong><br>
        Item: <strong>${r.item}</strong><br>
        Valor: <strong>R$ ${r.value}</strong>`;
   }
 }
 
+/* RESET REAL */
 function panic(){
   const item = prompt("O que você comprou?");
   if(!item) return;
-
   const value = prompt("Qual foi o valor?");
   if(!value) return;
 
@@ -238,7 +284,19 @@ function panic(){
   update();
 }
 
+/* DOM SHORTCUTS */
+const counter = document.getElementById("counter");
+const recordEl = document.getElementById("record");
+const resets = document.getElementById("resets");
+const progressBar = document.getElementById("progressBar");
+const lastReset = document.getElementById("lastReset");
+const hh = document.getElementById("hh");
+const mm = document.getElementById("mm");
+const ss = document.getElementById("ss");
+
 update();
+updateClock();
+setInterval(updateClock,1000);
 setInterval(update,60000);
 </script>
 
