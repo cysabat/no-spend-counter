@@ -8,47 +8,114 @@
 <style>
 :root{
   --mint:#4fd1c5;
-  --pink:#e6f6f3;
+  --soft-pink:#e6f6f3; /* ← substituição solicitada */
   --lilac:#9f8fe0;
   --card:#ffffff;
   --muted:#6b9b95;
   --danger:#ef6f6f;
 }
+
 body{
   margin:0;
   font-family:Inter, Arial, sans-serif;
   background:linear-gradient(180deg,#f7fdfb,#fdf3f7);
   padding:40px 24px;
 }
+
 .wrapper{ width:360px; }
+
 .card{
   background:var(--card);
   border-radius:22px;
   padding:26px;
   box-shadow:0 16px 40px rgba(79,209,197,.35);
 }
+
 h1{
   font-size:18px;
   text-align:center;
   color:#2b6f69;
 }
+
 .counter{
   font-size:64px;
   font-weight:900;
   text-align:center;
   color:var(--mint);
 }
+
 .subtitle{
   text-align:center;
   font-size:14px;
   color:var(--muted);
 }
+
+/* ⏰ RELÓGIO */
 .clock{
   display:flex;
-  justify-content:center;
-  font-size:18px;
-  margin:10px 0;
+  flex-direction:column;
+  align-items:center;
+  margin:14px 0 6px;
 }
+
+.clock-label{
+  font-size:12px;
+  color:#7fb7b1;
+  margin-bottom:4px;
+}
+
+.clock-time{
+  display:flex;
+  align-items:center;
+  font-size:22px;
+  font-weight:700;
+  color:#2b6f69;
+  background:linear-gradient(90deg,var(--soft-pink),#ffffff);
+  padding:8px 16px;
+  border-radius:999px;
+  box-shadow:inset 0 0 0 1px #e0f2ef;
+  transition:all .4s ease;
+}
+
+.clock.night .clock-time{
+  background:linear-gradient(90deg,#2f6f68,#1f3d3a);
+  color:#e6f6f3;
+}
+
+.clock-time span{
+  min-width:26px;
+  text-align:center;
+}
+
+.clock-colon{
+  margin:0 4px;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%,50%,100%{opacity:1}
+  25%,75%{opacity:.25}
+}
+
+/* +24h */
+.full-day{
+  font-size:12px;
+  margin-top:6px;
+  color:#6bbfb6;
+  opacity:.85;
+}
+
+/* 🎉 animação virada do dia */
+@keyframes pop {
+  0%{transform:scale(1)}
+  50%{transform:scale(1.08)}
+  100%{transform:scale(1)}
+}
+.pop{
+  animation:pop .6s ease;
+}
+
+/* progresso */
 .progress{
   height:12px;
   background:#e3f3f1;
@@ -57,10 +124,12 @@ h1{
 }
 .progress div{
   height:100%;
-  background:linear-gradient(90deg,var(--mint),var(--pink));
+  background:linear-gradient(90deg,var(--mint),var(--soft-pink));
   width:0%;
   transition:width .4s ease;
 }
+
+/* badges */
 .badges{
   display:flex;
   justify-content:center;
@@ -73,15 +142,15 @@ h1{
   border-radius:999px;
   font-size:12px;
   background:#e6f6f3;
-  color:#d6297d;
+  color:#4c8f88;
   opacity:.70;
-  transition:.3s;
 }
 .badge.active{
   opacity:1;
   background:linear-gradient(90deg,var(--mint),var(--lilac));
   color:white;
 }
+
 button{
   width:100%;
   margin-top:18px;
@@ -93,16 +162,18 @@ button{
   font-size:14px;
   cursor:pointer;
 }
+
 a{
   display:block;
   margin-top:12px;
   text-align:center;
   font-size:13px;
 }
+
 .status{
   text-align:center;
   font-size:12px;
-  color:#d6297d;
+  color:#6b9b95;
   margin-top:6px;
 }
 </style>
@@ -113,18 +184,25 @@ a{
 <div class="wrapper">
 <div class="card">
 
-<h1>💰 Estou há </h1>
+<h1>💰 ESTOU HÁ </h1>
 
 <div class="counter" id="counter">0</div>
-<div class="subtitle">DIAS SEM GASTAR COM BOBAGENS...</div>
+<div class="subtitle">DIAS SEM GASTAR DINHEIRO COM BOBAGENS</div>
 
-<div class="clock" id="clock">⏰ carregando...</div>
-
-<div class="progress">
-  <div id="progressBar"></div>
+<div class="clock" id="clock">
+  <div class="clock-label">⏳ tempo agora</div>
+  <div class="clock-time">
+    <span id="hh">00</span>
+    <span class="clock-colon">:</span>
+    <span id="mm">00</span>
+    <span class="clock-colon">:</span>
+    <span id="ss">00</span>
+  </div>
+  <div class="full-day" id="fullDay">+0h completas</div>
 </div>
 
-<!-- BADGES -->
+<div class="progress"><div id="progressBar"></div></div>
+
 <div class="badges">
   <div class="badge" data-days="30">🏅 30 dias</div>
   <div class="badge" data-days="90">🏅 90 dias</div>
@@ -142,96 +220,87 @@ a{
 </div>
 
 <script>
-/* =========================
-   CONFIGURAÇÃO
-========================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbzFVm97KE9zhDXRamc7Zcs_7hCbx4HsSmQd08yfpsVFm7sBqQ6GiUSX6N9qyX-oKkA/exec";
 const START_DATE = new Date("2026-01-01T00:00:00").getTime();
 const DAY = 86400000;
 const GOAL = 365;
 
-/* =========================
-   RELÓGIO
-========================= */
+let lastDay = Math.floor((Date.now() - START_DATE) / DAY);
+
+/* relógio */
 function updateClock(){
   const n = new Date();
-  document.getElementById("clock").innerText =
-    `⏰ ${String(n.getHours()).padStart(2,"0")}:` +
-    `${String(n.getMinutes()).padStart(2,"0")}:` +
-    `${String(n.getSeconds()).padStart(2,"0")}`;
+
+  hh.textContent = String(n.getHours()).padStart(2,"0");
+  mm.textContent = String(n.getMinutes()).padStart(2,"0");
+  ss.textContent = String(n.getSeconds()).padStart(2,"0");
+
+  // 🌙 modo noite
+  const hour = n.getHours();
+  clock.classList.toggle("night", hour >= 20 || hour < 6);
 }
 
-/* =========================
-   CONTADOR
-========================= */
-function daysSince(start){
-  return Math.floor((Date.now() - start) / DAY) + 1;
+/* contador */
+function daysSince(){
+  return Math.floor((Date.now() - START_DATE) / DAY) + 1;
 }
 
-function updateBadges(days){
+function updateCounter(){
+  const now = Date.now();
+  const days = daysSince();
+  const hours = Math.floor((now - START_DATE) / (1000 * 60 * 60));
+
+  counter.textContent = days;
+  progressBar.style.width =
+    Math.min((days / GOAL) * 100, 100) + "%";
+
+  fullDay.textContent = `+${hours}h completas`;
+
   document.querySelectorAll(".badge").forEach(b=>{
     if(days >= Number(b.dataset.days)){
       b.classList.add("active");
     }
   });
-}
 
-function updateCounter(){
-  const days = daysSince(START_DATE);
-
-  document.getElementById("counter").innerText = days;
-
-  document.getElementById("progressBar").style.width =
-    Math.min((days / GOAL) * 100, 100) + "%";
-
-  updateBadges(days);
-}
-
-/* =========================
-   RESET (ENVIA PARA GOOGLE)
-========================= */
-async function panic(){
-  const item = prompt("O que você comprou?");
-  if(!item) return;
-
-  const value = prompt("Qual foi o valor?");
-  if(!value) return;
-
-  const payload = {
-    date: new Date().toLocaleDateString("pt-BR"),
-    item,
-    value
-  };
-
-  const status = document.getElementById("status");
-  status.innerText = "⏳ Salvando gasto...";
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if(!response.ok) throw new Error();
-
-    status.innerText = "✅ Gasto salvo com sucesso!";
-    setTimeout(()=>status.innerText="",3000);
-
-  } catch {
-    status.innerText = "❌ Erro ao salvar gasto";
+  // 🎉 animação ao virar o dia
+  const currentDay = Math.floor((now - START_DATE) / DAY);
+  if(currentDay > lastDay){
+    counter.classList.add("pop");
+    setTimeout(()=>counter.classList.remove("pop"),600);
+    lastDay = currentDay;
   }
 }
 
-/* =========================
-   BOOT
-========================= */
-document.getElementById("panicBtn").addEventListener("click", panic);
+/* reset */
+async function panic(){
+  const item = prompt("O que você comprou?");
+  if(!item) return;
+  const value = prompt("Qual foi o valor?");
+  if(!value) return;
 
-updateCounter();
+  status.textContent = "⏳ Salvando gasto...";
+  try{
+    await fetch(API_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        date:new Date().toLocaleDateString("pt-BR"),
+        item,value
+      })
+    });
+    status.textContent = "✅ Gasto salvo com sucesso!";
+    setTimeout(()=>status.textContent="",3000);
+  }catch{
+    status.textContent = "❌ Erro ao salvar gasto";
+  }
+}
+
+panicBtn.addEventListener("click",panic);
+
 updateClock();
-setInterval(updateClock, 1000);
-setInterval(updateCounter, 60000);
+updateCounter();
+setInterval(updateClock,1000);
+setInterval(updateCounter,60000);
 </script>
 
 </body>
