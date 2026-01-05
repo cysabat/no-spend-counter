@@ -1,281 +1,226 @@
-<!DO<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>No Spend Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<title>No Spend Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f7fdfb;
+  --card:#ffffff;
+  --mint:#4fd1c5;
+  --pink:#f2a1b3;
+  --lilac:#9f8fe0;
+  --text:#1f3d3a;
+  --muted:#6b9b95;
+  --danger:#ef6f6f;
+}
 
-  <style>
-    :root {
-      --bg: #f7fdfb;
-      --card: #ffffff;
-      --primary: #5fc6b6;      /* menta mais forte */
-      --secondary: #e8a5b8;    /* rosa mais presente */
-      --accent: #9d8fd9;       /* lilás */
-      --text: #2f4f4f;
-      --muted: #6b8f8b;
-      --danger: #e57373;
-    }
+body{
+  margin:0;
+  font-family:Inter, Arial, sans-serif;
+  background:linear-gradient(180deg,#f7fdfb,#fdf3f7);
+  padding:40px 24px;
+}
 
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: linear-gradient(180deg, #f7fdfb, #fdf4f8);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      padding: 40px 16px;
-    }
+/* página pequena, alinhada à esquerda */
+.wrapper{
+  width:340px;
+}
 
-    .app {
-      width: 100%;
-      max-width: 420px;
-    }
+/* card */
+.card{
+  background:var(--card);
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 16px 40px rgba(79,209,197,.35);
+}
 
-    .card {
-      background: var(--card);
-      border-radius: 22px;
-      padding: 22px;
-      margin-bottom: 18px;
-      box-shadow: 0 14px 34px rgba(95, 198, 182, 0.25);
-    }
+/* título */
+h1{
+  margin:0 0 12px;
+  font-size:18px;
+  color:#2b6f69;
+  text-align:center;
+}
 
-    h1 {
-      font-size: 20px;
-      margin-bottom: 10px;
-      color: #2f6f68;
-      text-align: left;
-    }
+/* contador */
+.counter{
+  font-size:56px;
+  font-weight:800;
+  text-align:center;
+  color:var(--mint);
+  margin:6px 0;
+}
 
-    .counter {
-      font-size: 42px;
-      font-weight: 700;
-      color: var(--primary);
-      text-align: left; /* alinhado à esquerda */
-      margin-bottom: 4px;
-    }
+.subtitle{
+  text-align:center;
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:14px;
+}
 
-    .meta {
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 10px;
-      text-align: left;
-    }
+/* progresso */
+.progress{
+  height:12px;
+  background:#e3f3f1;
+  border-radius:999px;
+  overflow:hidden;
+}
 
-    .progress {
-      height: 10px;
-      background: #dff1ee;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
+.progress div{
+  height:100%;
+  background:linear-gradient(90deg,var(--mint),var(--pink));
+  width:0%;
+  transition:width .4s ease;
+}
 
-    .progress div {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
-      width: 0%;
-      transition: width .4s ease;
-    }
+/* stats */
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  font-size:13px;
+  color:#4b7f79;
+  margin-top:14px;
+  text-align:center;
+}
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      font-size: 14px;
-      margin-top: 14px;
-      color: #4f7f7a;
-    }
+/* badges */
+.badges{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+  margin-top:14px;
+}
 
-    button {
-      width: 100%;
-      margin-top: 18px;
-      padding: 13px;
-      border-radius: 16px;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
-      background: linear-gradient(90deg, var(--danger), #ef9a9a);
-      color: white;
-    }
+.badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  background:#e6f6f3;
+  color:#4c8f88;
+  opacity:.35;
+}
 
-    /* BADGES */
-    .badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
+.badge.active{
+  opacity:1;
+  background:linear-gradient(90deg,var(--mint),var(--lilac));
+  color:white;
+  box-shadow:0 6px 16px rgba(79,209,197,.45);
+}
 
-    .badge {
-      padding: 7px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: #e1f4f1;
-      color: #3f7f77;
-      border: 1px solid #bfe6e0;
-      opacity: 0.35;
-      transition: all .3s ease;
-    }
-
-    .badge.active {
-      opacity: 1;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      color: white;
-      border: none;
-      box-shadow: 0 6px 14px rgba(95, 198, 182, 0.35);
-    }
-
-    canvas {
-      margin-top: 10px;
-    }
-  </style>
+/* botão */
+button{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(90deg,var(--danger),#f49a9a);
+  color:white;
+  font-size:14px;
+  cursor:pointer;
+}
+</style>
 </head>
 
 <body>
-<div class="app">
 
+<div class="wrapper">
   <div class="card">
     <h1>💰 Dias sem gastar dinheiro</h1>
 
-    <div class="counter" id="counter">0 dias</div>
-    <div class="meta">Meta anual: <strong>365 dias</strong></div>
+    <div class="counter" id="counter">5</div>
+    <div class="subtitle">dias sem gastar</div>
 
     <div class="progress">
       <div id="progressBar"></div>
     </div>
 
     <div class="stats">
-      <div>🏆 Recorde: <span id="record">0</span></div>
-      <div>🔁 Resets: <span id="resets">0</span></div>
-      <div>📅 Desde:</div>
-      <div><span id="since">01/01/2026</span></div>
+      <div>🏆 Recorde<br><strong id="record">5</strong></div>
+      <div>🔁 Resets<br><strong id="resets">0</strong></div>
+      <div>📅 Desde<br><strong id="since">—</strong></div>
+      <div>🎯 Meta<br><strong>365</strong></div>
     </div>
 
     <div class="badges">
-      <div class="badge" data-days="30">🌱 30 dias</div>
-      <div class="badge" data-days="90">🌸 90 dias</div>
-      <div class="badge" data-days="180">🌷 180 dias</div>
-      <div class="badge" data-days="365">👑 365 dias</div>
+      <div class="badge" data-days="30">🌱 30</div>
+      <div class="badge" data-days="90">🌸 90</div>
+      <div class="badge" data-days="180">🌷 180</div>
+      <div class="badge" data-days="365">👑 365</div>
     </div>
 
     <button onclick="panic()">🚨 Gastei dinheiro</button>
   </div>
-
-  <div class="card">
-    <h1>📈 Histórico</h1>
-    <canvas id="chart"></canvas>
-  </div>
-
 </div>
 
 <script>
-  const FIXED_START_DATE = new Date("2026-01-01T00:00:00").getTime();
-  const INITIAL_OFFSET_DAYS = 5; // você já está há 5 dias sem gastar
-  const GOAL_DAYS = 365;
+const GOAL = 365;
+const STORAGE = {
+  start:"ns_start",
+  record:"ns_record",
+  resets:"ns_resets"
+};
 
-  const STORAGE = {
-    start: "ns_start",
-    record: "ns_record",
-    history: "ns_history",
-    resets: "ns_resets"
-  };
+/* START REAL = agora - 5 dias */
+function getStart(){
+  let s = localStorage.getItem(STORAGE.start);
+  if(!s){
+    const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
+    localStorage.setItem(STORAGE.start,fiveDaysAgo);
+    return fiveDaysAgo;
+  }
+  return Number(s);
+}
 
-  function now() {
-    return Date.now();
+function daysSince(start){
+  return Math.floor((Date.now() - start)/(1000*60*60*24));
+}
+
+function update(){
+  const start = getStart();
+  const days = daysSince(start);
+
+  document.getElementById("counter").innerText = days;
+  document.getElementById("since").innerText =
+    new Date(start).toLocaleDateString("pt-BR");
+
+  let record = Number(localStorage.getItem(STORAGE.record) || 0);
+  if(days > record){
+    record = days;
+    localStorage.setItem(STORAGE.record,record);
   }
 
-  function daysBetween(ms) {
-    return Math.floor(ms / (1000 * 60 * 60 * 24));
-  }
+  document.getElementById("record").innerText = record;
+  document.getElementById("resets").innerText =
+    localStorage.getItem(STORAGE.resets) || 0;
 
-  function getStart() {
-    let start = localStorage.getItem(STORAGE.start);
-    if (!start) {
-      const adjustedStart =
-        FIXED_START_DATE - INITIAL_OFFSET_DAYS * 24 * 60 * 60 * 1000;
-      localStorage.setItem(STORAGE.start, adjustedStart);
-      return adjustedStart;
-    }
-    return Number(start);
-  }
+  document.getElementById("progressBar").style.width =
+    Math.min((days/GOAL)*100,100)+"%";
 
-  function updateBadges(days) {
-    document.querySelectorAll(".badge").forEach(badge => {
-      badge.classList.toggle(
-        "active",
-        days >= Number(badge.dataset.days)
-      );
-    });
-  }
-
-  function updateUI() {
-    const start = getStart();
-    const days = daysBetween(now() - start);
-
-    document.getElementById("counter").innerText = `${days} dias`;
-    document.getElementById("since").innerText =
-      new Date(start).toLocaleDateString("pt-BR");
-
-    let record = Number(localStorage.getItem(STORAGE.record) || 0);
-    if (days > record) {
-      record = days;
-      localStorage.setItem(STORAGE.record, record);
-    }
-
-    document.getElementById("record").innerText = record;
-    document.getElementById("resets").innerText =
-      localStorage.getItem(STORAGE.resets) || 0;
-
-    document.getElementById("progressBar").style.width =
-      Math.min((days / GOAL_DAYS) * 100, 100) + "%";
-
-    updateBadges(days);
-  }
-
-  function panic() {
-    const reason = prompt("Qual foi o gasto?");
-    if (!reason) return;
-
-    const history =
-      JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
-
-    history.push({
-      date: new Date().toLocaleDateString("pt-BR"),
-      days: daysBetween(now() - getStart()),
-      reason
-    });
-
-    localStorage.setItem(STORAGE.history, JSON.stringify(history));
-    localStorage.setItem(STORAGE.start, now());
-
-    const resets = Number(localStorage.getItem(STORAGE.resets) || 0) + 1;
-    localStorage.setItem(STORAGE.resets, resets);
-
-    updateChart();
-    updateUI();
-  }
-
-  const ctx = document.getElementById("chart");
-  const chart = new Chart(ctx, {
-    type: "bar",
-    data: { labels: [], datasets: [{ data: [], backgroundColor: "#5fc6b6" }] },
-    options: { plugins: { legend: { display: false } } }
+  document.querySelectorAll(".badge").forEach(b=>{
+    b.classList.toggle("active", days >= Number(b.dataset.days));
   });
+}
 
-  function updateChart() {
-    const history =
-      JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
+function panic(){
+  const reason = prompt("Qual foi o gasto?");
+  if(!reason) return;
 
-    chart.data.labels = history.map(h => h.date);
-    chart.data.datasets[0].data = history.map(h => h.days);
-    chart.update();
-  }
+  localStorage.setItem(STORAGE.start,Date.now());
+  localStorage.setItem(
+    STORAGE.resets,
+    Number(localStorage.getItem(STORAGE.resets)||0)+1
+  );
+  update();
+}
 
-  updateChart();
-  updateUI();
-  setInterval(updateUI, 60000);
+update();
+setInterval(update,60000);
 </script>
 
 </body>
