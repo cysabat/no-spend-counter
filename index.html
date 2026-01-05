@@ -10,52 +10,42 @@
   --mint:#4fd1c5;
   --pink:#f2a1b3;
   --lilac:#9f8fe0;
-  --bg:#f7fdfb;
   --card:#ffffff;
   --text:#1f3d3a;
   --muted:#6b9b95;
   --danger:#ef6f6f;
 }
-
 body{
   margin:0;
   font-family:Inter, Arial, sans-serif;
   background:linear-gradient(180deg,#f7fdfb,#fdf3f7);
   padding:40px 24px;
 }
-
 .wrapper{ width:340px; }
-
 .card{
   background:var(--card);
   border-radius:22px;
   padding:26px;
   box-shadow:0 16px 40px rgba(79,209,197,.35);
 }
-
 h1{
   margin:0 0 14px;
   font-size:18px;
   color:#2b6f69;
   text-align:center;
 }
-
-/* CONTADOR */
 .counter{
   font-size:64px;
   font-weight:900;
   text-align:center;
   color:var(--mint);
 }
-
 .subtitle{
   text-align:center;
   font-size:14px;
   color:var(--muted);
   margin-bottom:8px;
 }
-
-/* RELÓGIO MODERNO */
 .clock{
   display:flex;
   justify-content:center;
@@ -65,32 +55,22 @@ h1{
   color:#4b7f79;
   margin-bottom:14px;
 }
-
-.clock .colon{
-  animation:blink 1s infinite;
-}
-
+.clock .colon{ animation:blink 1s infinite; }
 @keyframes blink{
   0%,50%,100%{opacity:1}
   25%,75%{opacity:.2}
 }
-
-/* PROGRESSO */
 .progress{
   height:12px;
   background:#e3f3f1;
   border-radius:999px;
   overflow:hidden;
 }
-
 .progress div{
   height:100%;
   background:linear-gradient(90deg,var(--mint),var(--pink));
   width:0%;
-  transition:width .4s ease;
 }
-
-/* STATS */
 .stats{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -100,8 +80,6 @@ h1{
   margin-top:16px;
   text-align:center;
 }
-
-/* RESET INFO */
 .last-reset{
   margin-top:14px;
   padding:12px;
@@ -110,31 +88,6 @@ h1{
   font-size:12px;
   color:#356e68;
 }
-
-/* BADGES */
-.badges{
-  display:flex;
-  justify-content:center;
-  gap:8px;
-  margin-top:16px;
-}
-
-.badge{
-  padding:6px 12px;
-  border-radius:999px;
-  font-size:12px;
-  background:#e6f6f3;
-  color:#4c8f88;
-  opacity:.35;
-}
-
-.badge.active{
-  opacity:1;
-  background:linear-gradient(90deg,var(--mint),var(--lilac));
-  color:white;
-}
-
-/* BOTÃO */
 button{
   width:100%;
   margin-top:20px;
@@ -150,51 +103,39 @@ button{
 </head>
 
 <body>
-
 <div class="wrapper">
-  <div class="card">
+<div class="card">
 
-    <h1>💰 Dias sem gastar dinheiro</h1>
+<h1>💰 Dias sem gastar dinheiro</h1>
 
-    <div class="counter" id="counter">5</div>
-    <div class="subtitle">dias sem gastar</div>
+<div class="counter" id="counter">5</div>
+<div class="subtitle">dias sem gastar</div>
 
-    <div class="clock">
-      <span id="hh">00</span><span class="colon">:</span>
-      <span id="mm">00</span><span class="colon">:</span>
-      <span id="ss">00</span>
-    </div>
+<div class="clock">
+  <span id="hh">00</span><span class="colon">:</span>
+  <span id="mm">00</span><span class="colon">:</span>
+  <span id="ss">00</span>
+</div>
 
-    <div class="progress">
-      <div id="progressBar"></div>
-    </div>
+<div class="progress"><div id="progressBar"></div></div>
 
-    <div class="stats">
-      <div>🏆 Recorde<br><strong id="record">5</strong></div>
-      <div>🔁 Resets<br><strong id="resets">0</strong></div>
-      <div>📅 Início<br><strong>01/01/2026</strong></div>
-      <div>🎯 Meta<br><strong>365</strong></div>
-    </div>
+<div class="stats">
+  <div>🏆 Recorde<br><strong id="record">5</strong></div>
+  <div>🔁 Resets<br><strong id="resets">0</strong></div>
+  <div>📅 Início<br><strong>01/01/2026</strong></div>
+  <div>🎯 Meta<br><strong>365</strong></div>
+</div>
 
-    <!-- LINHA SEMPRE VISÍVEL -->
-    <div id="lastReset" class="last-reset">
-      🎉 Nenhum gasto registrado até agora
-    </div>
+<div id="lastReset" class="last-reset">
+🎉 Nenhum gasto registrado até agora
+</div>
 
-    <div class="badges">
-      <div class="badge" data-days="30">30</div>
-      <div class="badge" data-days="90">90</div>
-      <div class="badge" data-days="180">180</div>
-      <div class="badge" data-days="365">365</div>
-    </div>
+<button onclick="panic()">🚨 Gastei dinheiro</button>
 
-    <button onclick="panic()">🚨 Gastei dinheiro</button>
-
-  </div>
+</div>
 </div>
 
 <script>
-/* CONFIGURAÇÃO */
 const START_DATE = new Date("2026-01-01T00:00:00").getTime();
 const CONFIRMED_DAYS = 5;
 const GOAL = 365;
@@ -206,22 +147,25 @@ const STORAGE = {
   last:"ns_last_reset"
 };
 
-/* INIT */
-function getStart(){
-  let s = localStorage.getItem(STORAGE.start);
-  if(!s){
-    const realStart = START_DATE - CONFIRMED_DAYS*86400000;
-    localStorage.setItem(STORAGE.start,realStart);
-    return realStart;
-  }
-  return Number(s);
-}
-
 function daysBetween(ms){
   return Math.floor(ms/(1000*60*60*24));
 }
 
-/* RELÓGIO */
+/* inicialização segura */
+function getStart(){
+  let s = localStorage.getItem(STORAGE.start);
+
+  if(!s){
+    const fixedStart = START_DATE - CONFIRMED_DAYS*86400000;
+    localStorage.setItem(STORAGE.start,fixedStart);
+    localStorage.setItem(STORAGE.record,CONFIRMED_DAYS);
+    localStorage.setItem(STORAGE.resets,0);
+    return fixedStart;
+  }
+
+  return Number(s);
+}
+
 function updateClock(){
   const n = new Date();
   hh.innerText = String(n.getHours()).padStart(2,"0");
@@ -229,28 +173,28 @@ function updateClock(){
   ss.innerText = String(n.getSeconds()).padStart(2,"0");
 }
 
-/* UPDATE */
 function update(){
   const start = getStart();
-  const days = daysBetween(Date.now()-start);
+  let days = daysBetween(Date.now()-start);
+
+  /* correção automática */
+  if(days < CONFIRMED_DAYS && Number(localStorage.getItem(STORAGE.resets)||0) === 0){
+    days = CONFIRMED_DAYS;
+  }
 
   counter.innerText = days;
 
   let record = Number(localStorage.getItem(STORAGE.record)||CONFIRMED_DAYS);
-  if(days>record){
-    record=days;
+  if(days > record){
+    record = days;
     localStorage.setItem(STORAGE.record,record);
   }
-  recordEl.innerText = record;
 
+  recordEl.innerText = record;
   resets.innerText = localStorage.getItem(STORAGE.resets)||0;
 
   progressBar.style.width =
     Math.min((days/GOAL)*100,100)+"%";
-
-  document.querySelectorAll(".badge").forEach(b=>{
-    if(days>=Number(b.dataset.days)) b.classList.add("active");
-  });
 
   const last = localStorage.getItem(STORAGE.last);
   if(last){
@@ -262,7 +206,6 @@ function update(){
   }
 }
 
-/* RESET REAL */
 function panic(){
   const item = prompt("O que você comprou?");
   if(!item) return;
@@ -284,7 +227,7 @@ function panic(){
   update();
 }
 
-/* DOM SHORTCUTS */
+/* DOM refs */
 const counter = document.getElementById("counter");
 const recordEl = document.getElementById("record");
 const resets = document.getElementById("resets");
