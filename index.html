@@ -9,147 +9,27 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
+    :root {
+      --bg: #f7fdfb;
+      --card: #ffffff;
+      --primary: #7fd1c6;      /* menta */
+      --secondary: #f3c6d3;    /* rosa delicado */
+      --accent: #c7b7e2;       /* lilás suave */
+      --text: #2f4f4f;
+      --muted: #7a9c99;
+      --danger: #f28b8b;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
+      font-family: "Inter", Arial, sans-serif;
+      background: linear-gradient(180deg, #f7fdfb, #fdf6fa);
+      color: var(--text);
       display: flex;
       justify-content: center;
-      padding: 20px;
+      padding: 40px 16px;
     }
 
     .app {
       width: 100%;
-      max-width: 420px;
-    }
-
-    .card {
-      background: #020617;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-
-    h1 {
-      font-size: 20px;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .counter {
-      font-size: 38px;
-      font-weight: bold;
-      color: #22c55e;
-      text-align: center;
-    }
-
-    .meta {
-      font-size: 14px;
-      text-align: center;
-      margin-top: 6px;
-      color: #94a3b8;
-    }
-
-    .progress {
-      height: 10px;
-      background: #1e293b;
-      border-radius: 6px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    .progress div {
-      height: 100%;
-      background: #22c55e;
-      width: 0%;
-      transition: width .3s ease;
-    }
-
-    .stats {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
-      background: #dc2626;
-      color: white;
-    }
-
-    canvas {
-      margin-top: 10px;
-    }
-  </style>
-</head>
-
-<body>
-<div class="app">
-
-  <!-- CONTADOR -->
-  <div class="card">
-    <h1>💰 Dias sem gastar dinheiro</h1>
-
-    <div class="counter" id="counter">0 dias</div>
-
-    <div class="meta">
-      Meta anual automática: <strong>365 dias</strong>
-    </div>
-
-    <div class="progress">
-      <div id="progressBar"></div>
-    </div>
-
-    <div class="stats">
-      <div>🏆 Recorde: <span id="record">0</span> dias</div>
-      <div>🔁 Resets: <span id="resets">0</span></div>
-      <div>📅 Desde: <span id="since">01/01/2026</span></div>
-    </div>
-
-    <button onclick="panic()">🚨 Gastei dinheiro</button>
-  </div>
-
-  <!-- GRÁFICO -->
-  <div class="card">
-    <h1>📈 Histórico de ciclos</h1>
-    <canvas id="chart"></canvas>
-  </div>
-
-</div>
-
-<script>
-  /* =============================
-     CONFIGURAÇÕES FIXAS
-  ============================== */
-  const FIXED_START_DATE = new Date("2026-01-01T00:00:00").getTime();
-  const GOAL_DAYS = 365;
-
-  const STORAGE = {
-    start: "ns_start",
-    record: "ns_record",
-    history: "ns_history",
-    resets: "ns_resets"
-  };
-
-  function now() {
-    return Date.now();
-  }
-
-  function daysBetween(ms) {
-    return Math.floor(ms / (1000 * 60 * 60 * 24));
-  }
-
-  function getStart() {
-    let start = localStorage.getItem(STORAGE.start);
-
-    if (!
+      max-width: 420px; /
