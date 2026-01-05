@@ -1,16 +1,232 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Contador xTiles</title>
+<head>
+  <meta charset="UTF-8">
+  <title>No Spend Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <script src="https://cdn.commoninja.com/sdk/latest/commonninja.js" defer></script>
-  </head>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh;">
-    
-    <div class="commonninja_component pid-d9ef177a-19a0-4d2a-ac7a-a89e0a281ce8"></div>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
 
-  </body>
+    .app {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 20px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .counter {
+      font-size: 36px;
+      font-weight: bold;
+      color: #22c55e;
+      text-align: center;
+    }
+
+    .meta {
+      font-size: 14px;
+      text-align: center;
+      margin-top: 8px;
+      color: #94a3b8;
+    }
+
+    .progress {
+      height: 10px;
+      background: #1e293b;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress div {
+      height: 100%;
+      background: #22c55e;
+      width: 0%;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    input, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+    }
+
+    input {
+      background: #1e293b;
+      color: white;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .panic {
+      background: #dc2626;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <div class="card">
+      <h1>💰 Dias sem gastar dinheiro</h1>
+
+      <div class="counter" id="counter">0 dias</div>
+
+      <div class="meta">
+        Meta (dias):
+        <input type="number" id="goal" min="1">
+      </div>
+
+      <div class="progress">
+        <div id="progressBar"></div>
+      </div>
+
+      <div class="stats">
+        <div>🏆 Recorde: <span id="record">0</span></div>
+        <div>📅 Desde: <span id="since">-</span></div>
+      </div>
+
+      <button class="panic" onclick="panic()">🚨 Gastei dinheiro</button>
+    </div>
+
+    <div class="card">
+      <h1>📈 Histórico</h1>
+      <canvas id="chart"></canvas>
+    </div>
+
+  </div>
+
+<script>
+  const STORAGE = {
+    start: "ns_start",
+    record: "ns_record",
+    history: "ns_history",
+    goal: "ns_goal"
+  };
+
+  function now() {
+    return Date.now();
+  }
+
+  function daysBetween(ms) {
+    return Math.floor(ms / (1000 * 60 * 60 * 24));
+  }
+
+  function getStart() {
+    let s = localStorage.getItem(STORAGE.start);
+    if (!s) {
+      s = now();
+      localStorage.setItem(STORAGE.start, s);
+    }
+    return Number(s);
+  }
+
+  function updateUI() {
+    const start = getStart();
+    const diff = now() - start;
+    const days = daysBetween(diff);
+
+    document.getElementById("counter").innerText = days + " dias";
+    document.getElementById("since").innerText =
+      new Date(start).toLocaleDateString("pt-BR");
+
+    let record = Number(localStorage.getItem(STORAGE.record) || 0);
+    if (days > record) {
+      record = days;
+      localStorage.setItem(STORAGE.record, record);
+    }
+    document.getElementById("record").innerText = record;
+
+    const goal = Number(localStorage.getItem(STORAGE.goal) || 30);
+    document.getElementById("goal").value = goal;
+
+    const progress = Math.min((days / goal) * 100, 100);
+    document.getElementById("progressBar").style.width = progress + "%";
+  }
+
+  function panic() {
+    const reason = prompt("Qual foi o gasto?");
+    if (!reason) return;
+
+    const history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
+    history.push({
+      date: new Date().toLocaleDateString("pt-BR"),
+      days: daysBetween(now() - getStart()),
+      reason: reason
+    });
+
+    localStorage.setItem(STORAGE.history, JSON.stringify(history));
+    localStorage.setItem(STORAGE.start, now());
+
+    updateChart();
+    updateUI();
+  }
+
+  document.getElementById("goal").addEventListener("change", e => {
+    localStorage.setItem(STORAGE.goal, e.target.value);
+    updateUI();
+  });
+
+  const ctx = document.getElementById("chart");
+  const chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Dias sem gastar",
+        data: []
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  function updateChart() {
+    const history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
+    chart.data.labels = history.map(h => h.date);
+    chart.data.datasets[0].data = history.map(h => h.days);
+    chart.update();
+  }
+
+  updateChart();
+  updateUI();
+  setInterval(updateUI, 60000);
+</script>
+
+</body>
 </html>
